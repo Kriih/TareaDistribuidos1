@@ -1,0 +1,10 @@
+package models
+
+type Driver struct {
+	DriverNumber int    `json:"driver_number"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	NameAcronym  string `json:"name_acronym"`
+	TeamName     string `json:"team_name"`
+	CountryCode  string `json:"country_code"`
+}
