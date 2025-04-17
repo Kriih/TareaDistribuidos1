@@ -91,46 +91,46 @@ func contains(slice []int, value int) bool {
 }
 
 func SyncPositions() {
-	rows, err := db.DB.Query("SELECT session_key FROM sessions")
-	if err != nil {
-		fmt.Printf("Error al obtener sesiones: %v\n", err)
-		return
-	}
-	defer rows.Close()
+	// rows, err := db.DB.Query("SELECT session_key FROM sessions")
+	// if err != nil {
+	// 	fmt.Printf("Error al obtener sesiones: %v\n", err)
+	// 	return
+	// }
+	// defer rows.Close()
 
-	var sessionKey int
-	for rows.Next() {
-		if err := rows.Scan(&sessionKey); err != nil {
-			continue
-		}
+	// var sessionKey int
+	// for rows.Next() {
+	// 	if err := rows.Scan(&sessionKey); err != nil {
+	// 		continue
+	// 	}
 
-		url := fmt.Sprintf("https://api.openf1.org/v1/position?session_key=%d", sessionKey)
-		resp, err := http.Get(url)
-		if err != nil {
-			fmt.Printf("Error request posiciones sesión %d: %v\n", sessionKey, err)
-			continue
-		}
-		body, _ := ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
+	// 	url := fmt.Sprintf("https://api.openf1.org/v1/position?session_key=%d", sessionKey)
+	// 	resp, err := http.Get(url)
+	// 	if err != nil {
+	// 		fmt.Printf("Error request posiciones sesión %d: %v\n", sessionKey, err)
+	// 		continue
+	// 	}
+	// 	body, _ := ioutil.ReadAll(resp.Body)
+	// 	resp.Body.Close()
 
-		var positions []models.Position
-		if err := json.Unmarshal(body, &positions); err != nil {
-			fmt.Printf("Error parseando posiciones sesión %d: %v\n", sessionKey, err)
-			continue
-		}
+	// 	var positions []models.Position
+	// 	if err := json.Unmarshal(body, &positions); err != nil {
+	// 		fmt.Printf("Error parseando posiciones sesión %d: %v\n", sessionKey, err)
+	// 		continue
+	// 	}
 
-		for _, p := range positions {
-			stmt := `
-				INSERT INTO positions (
-					driver_number, session_key, position, date
-				) VALUES (?, ?, ?, ?)
-			`
-			_, err := db.DB.Exec(stmt, p.DriverNumber, p.SessionKey, p.Position, p.Date)
-			if err != nil {
-				fmt.Printf("Error insertando posición sesión %d: %v\n", sessionKey, err)
-			}
-		}
-	}
+	// 	for _, p := range positions {
+	// 		stmt := `
+	// 			INSERT INTO positions (
+	// 				driver_number, session_key, position, date
+	// 			) VALUES (?, ?, ?, ?)
+	// 		`
+	// 		_, err := db.DB.Exec(stmt, p.DriverNumber, p.SessionKey, p.Position, p.Date)
+	// 		if err != nil {
+	// 			fmt.Printf("Error insertando posición sesión %d: %v\n", sessionKey, err)
+	// 		}
+	// 	}
+	// }
 
 	fmt.Println("Posiciones sincronizadas.")
 }
