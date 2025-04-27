@@ -11,6 +11,6 @@ func NewRouter() *mux.Router {
 	r := mux.NewRouter()
 
 	// Rutas para los usuarios
-	r.HandleFunc("/", handlers.HomeHandler).Methods("GET")
+	r.HandleFunc("/api", handlers.HomeHandler).Methods("GET")
 	return r
 }
