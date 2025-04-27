@@ -10,4 +10,5 @@ func main() {
 	services.SyncDrivers()
 	services.SyncSessions()
 	services.SyncPositions()
+	services.SyncLaps()
 }

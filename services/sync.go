@@ -90,51 +90,6 @@ func contains(slice []int, value int) bool {
 	return false
 }
 
-// func SyncPositions() {
-// rows, err := db.DB.Query("SELECT session_key FROM sessions")
-// if err != nil {
-// 	fmt.Printf("Error al obtener sesiones: %v\n", err)
-// 	return
-// }
-// defer rows.Close()
-
-// var sessionKey int
-// for rows.Next() {
-// 	if err := rows.Scan(&sessionKey); err != nil {
-// 		continue
-// 	}
-
-// 	url := fmt.Sprintf("https://api.openf1.org/v1/position?session_key=%d", sessionKey)
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		fmt.Printf("Error request posiciones sesión %d: %v\n", sessionKey, err)
-// 		continue
-// 	}
-// 	body, _ := ioutil.ReadAll(resp.Body)
-// 	resp.Body.Close()
-
-// 	var positions []models.Position
-// 	if err := json.Unmarshal(body, &positions); err != nil {
-// 		fmt.Printf("Error parseando posiciones sesión %d: %v\n", sessionKey, err)
-// 		continue
-// 	}
-
-// 	for _, p := range positions {
-// 		stmt := `
-// 			INSERT INTO positions (
-// 				driver_number, session_key, position, date
-// 			) VALUES (?, ?, ?, ?)
-// 		`
-// 		_, err := db.DB.Exec(stmt, p.DriverNumber, p.SessionKey, p.Position, p.Date)
-// 		if err != nil {
-// 			fmt.Printf("Error insertando posición sesión %d: %v\n", sessionKey, err)
-// 		}
-// 	}
-// }
-
-// 	fmt.Println("Posiciones sincronizadas.")
-// }
-
 func SyncPositions() {
 	rows, err := db.DB.Query("SELECT session_key FROM sessions")
 	if err != nil {
@@ -197,5 +152,63 @@ func insertDriver(d models.Driver) {
 	_, err := db.DB.Exec(stmt, d.DriverNumber, d.FirstName, d.LastName, d.NameAcronym, d.TeamName, d.CountryCode)
 	if err != nil {
 		fmt.Printf("Error insertando driver %d: %v\n", d.DriverNumber, err)
+	}
+}
+
+func SyncLaps() {
+	rows, err := db.DB.Query("SELECT session_key FROM sessions")
+	if err != nil {
+		fmt.Printf("Error al obtener sesiones: %v\n", err)
+		return
+	}
+	defer rows.Close()
+
+	var sessionKeys []int
+	for rows.Next() {
+		var sessionKey int
+		if err := rows.Scan(&sessionKey); err == nil {
+			sessionKeys = append(sessionKeys, sessionKey)
+		}
+	}
+	rows.Close() // muy importante, para evitar locking
+
+	for _, sessionKey := range sessionKeys {
+		url := fmt.Sprintf("https://api.openf1.org/v1/laps?session_key=%d", sessionKey)
+		resp, err := http.Get(url)
+		if err != nil {
+			fmt.Printf("Error request laps sesión %d: %v\n", sessionKey, err)
+			continue
+		}
+		body, _ := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		var laps []models.Lap
+		if err := json.Unmarshal(body, &laps); err != nil {
+			fmt.Printf("Error parseando laps sesión %d: %v\n", sessionKey, err)
+			continue
+		}
+
+		for _, l := range laps {
+			insertLap(l)
+		}
+	}
+	fmt.Println("Vueltas sincronizadas.")
+}
+
+func insertLap(l models.Lap) {
+	stmt := `
+		INSERT OR IGNORE INTO laps (
+			driver_number, session_key, lap_number,
+			lap_duration, duration_sector_1, duration_sector_2, duration_sector_3,
+			st_speed, date_start
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`
+	_, err := db.DB.Exec(stmt,
+		l.DriverNumber, l.SessionKey, l.LapNumber,
+		l.LapDuration, l.Sector1, l.Sector2, l.Sector3,
+		l.StSpeed, l.DateStart,
+	)
+	if err != nil {
+		fmt.Printf("Error insertando vuelta: %v\n", err)
 	}
 }
