@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"bufio"
+	"os"
 
 	_ "modernc.org/sqlite"
 )
@@ -18,7 +20,44 @@ func InitDB() {
 		log.Fatalf("Error abriendo base de datos: %v", err)
 	}
 
+	// Preguntamos si queremos actualizar la base de datos
+	if confirmUpdate() {
+		// Si se confirma, borramos los datos de las tablas
+		clearTables()
+	}
 	createTables()
+}
+
+func confirmUpdate() bool {
+	fmt.Println("¿Desea actualizar la base de datos? (s/n)")
+	reader := bufio.NewReader(os.Stdin)
+	input, _ := reader.ReadString('\n')
+
+	return input == "s\n" || input == "S\n"
+}
+
+func clearTables() {
+	_, err := DB.Exec("DELETE FROM drivers")
+	if err != nil {
+		log.Printf("Error limpiando tabla drivers: %v", err)
+	}
+
+	_, err = DB.Exec("DELETE FROM sessions")
+	if err != nil {
+		log.Printf("Error limpiando tabla sessions: %v", err)
+	}
+
+	_, err = DB.Exec("DELETE FROM positions")
+	if err != nil {
+		log.Printf("Error limpiando tabla positions: %v", err)
+	}
+
+	_, err = DB.Exec("DELETE FROM laps")
+	if err != nil {
+		log.Printf("Error limpiando tabla laps: %v", err)
+	}
+
+	fmt.Println("Datos de las tablas eliminados correctamente.")
 }
 
 func createTables() {
@@ -54,15 +93,15 @@ func createTables() {
 
 	createLapTable := `
 	CREATE TABLE IF NOT EXISTS laps (
-		driver_number INTEGER,
-		session_key INTEGER,
-		lap_number INTEGER,
-		lap_duration REAL,
-		duration_sector_1 REAL,
-		duration_sector_2 REAL,
-		duration_sector_3 REAL,
-		st_speed REAL,
-		date_start TEXT
+    driver_number INTEGER,
+    session_key INTEGER,
+    lap_number INTEGER,
+    lap_duration REAL,
+    duration_sector_1 REAL NULL,  
+    duration_sector_2 REAL NULL,  
+    duration_sector_3 REAL NULL,  
+    st_speed REAL NULL,           
+    date_start TEXT NULL          
 	);`
 
 	statements := []string{
