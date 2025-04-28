@@ -11,6 +11,9 @@ func NewRouter() *gin.Engine {
 	r := gin.Default()
 
 	// Rutas para los usuarios
+	r.GET("/api/carrera", handlers.GetRaces)
 	r.GET("/api/carrera/detalle/:id", handlers.GetRaceDetail)
+	r.GET("/api/temporada/resumen", handlers.GetSeasonSummary)
+
 	return r
 }
