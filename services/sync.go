@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
 	"f1-statshub/db"
 	"f1-statshub/models"
 )
@@ -16,13 +15,12 @@ var sessionDrivers = map[int][]int{
 	9636: {30, 50, 43},
 }
 
-func SyncDrivers() {
+func SyncDrivers() error {
 	for sessionKey, driverNumbers := range sessionDrivers {
 		url := fmt.Sprintf("https://api.openf1.org/v1/drivers?session_key=%d", sessionKey)
 		resp, err := http.Get(url)
 		if err != nil {
-			fmt.Printf("Error en request: %v\n", err)
-			continue
+			return fmt.Errorf("Error en request de drivers: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -30,8 +28,7 @@ func SyncDrivers() {
 
 		var allDrivers []models.Driver
 		if err := json.Unmarshal(body, &allDrivers); err != nil {
-			fmt.Printf("Error parseando JSON: %v\n", err)
-			continue
+			return fmt.Errorf("Error parseando JSON de drivers: %v", err)
 		}
 
 		for _, d := range allDrivers {
@@ -41,14 +38,14 @@ func SyncDrivers() {
 		}
 	}
 	fmt.Println("Drivers sincronizados.")
+	return nil
 }
 
-func SyncSessions() {
+func SyncSessions() error {
 	url := "https://api.openf1.org/v1/sessions?session_name=Race&year=2024"
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Printf("Error al hacer request de sesiones: %v\n", err)
-		return
+		return fmt.Errorf("Error al hacer request de sesiones: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -56,14 +53,14 @@ func SyncSessions() {
 
 	var sessions []models.Session
 	if err := json.Unmarshal(body, &sessions); err != nil {
-		fmt.Printf("Error parseando JSON de sesiones: %v\n", err)
-		return
+		return fmt.Errorf("Error parseando JSON de sesiones: %v", err)
 	}
 
 	for _, s := range sessions {
 		insertSession(s)
 	}
 	fmt.Println("Sesiones sincronizadas.")
+	return nil
 }
 
 func insertSession(s models.Session) {
@@ -90,11 +87,10 @@ func contains(slice []int, value int) bool {
 	return false
 }
 
-func SyncPositions() {
+func SyncPositions() error {
 	rows, err := db.DB.Query("SELECT session_key FROM sessions")
 	if err != nil {
-		fmt.Printf("Error al obtener sesiones: %v\n", err)
-		return
+		return fmt.Errorf("Error al obtener sesiones: %v", err)
 	}
 	defer rows.Close()
 
@@ -105,22 +101,20 @@ func SyncPositions() {
 			keys = append(keys, sessionKey)
 		}
 	}
-	rows.Close() // aseguramos cierre antes de inserts
+	rows.Close()
 
 	for _, sessionKey := range keys {
 		url := fmt.Sprintf("https://api.openf1.org/v1/position?session_key=%d", sessionKey)
 		resp, err := http.Get(url)
 		if err != nil {
-			fmt.Printf("Error request posiciones sesión %d: %v\n", sessionKey, err)
-			continue
+			return fmt.Errorf("Error request posiciones sesión %d: %v", sessionKey, err)
 		}
 		body, _ := ioutil.ReadAll(resp.Body)
 		resp.Body.Close()
 
 		var positions []models.Position
 		if err := json.Unmarshal(body, &positions); err != nil {
-			fmt.Printf("Error parseando posiciones sesión %d: %v\n", sessionKey, err)
-			continue
+			return fmt.Errorf("Error parseando posiciones sesión %d: %v", sessionKey, err)
 		}
 
 		for _, p := range positions {
@@ -129,6 +123,7 @@ func SyncPositions() {
 	}
 
 	fmt.Println("Posiciones sincronizadas.")
+	return nil
 }
 
 func insertPosition(p models.Position) {
@@ -155,11 +150,10 @@ func insertDriver(d models.Driver) {
 	}
 }
 
-func SyncLaps() {
+func SyncLaps() error {
 	rows, err := db.DB.Query("SELECT session_key FROM sessions")
 	if err != nil {
-		fmt.Printf("Error al obtener sesiones: %v\n", err)
-		return
+		return fmt.Errorf("Error al obtener sesiones: %v", err)
 	}
 	defer rows.Close()
 
@@ -170,22 +164,20 @@ func SyncLaps() {
 			sessionKeys = append(sessionKeys, sessionKey)
 		}
 	}
-	rows.Close() // muy importante, para evitar locking
+	rows.Close()
 
 	for _, sessionKey := range sessionKeys {
 		url := fmt.Sprintf("https://api.openf1.org/v1/laps?session_key=%d", sessionKey)
 		resp, err := http.Get(url)
 		if err != nil {
-			fmt.Printf("Error request laps sesión %d: %v\n", sessionKey, err)
-			continue
+			return fmt.Errorf("Error request laps sesión %d: %v", sessionKey, err)
 		}
 		body, _ := ioutil.ReadAll(resp.Body)
 		resp.Body.Close()
 
 		var laps []models.Lap
 		if err := json.Unmarshal(body, &laps); err != nil {
-			fmt.Printf("Error parseando laps sesión %d: %v\n", sessionKey, err)
-			continue
+			return fmt.Errorf("Error parseando laps sesión %d: %v", sessionKey, err)
 		}
 
 		for _, l := range laps {
@@ -193,6 +185,7 @@ func SyncLaps() {
 		}
 	}
 	fmt.Println("Vueltas sincronizadas.")
+	return nil
 }
 
 func insertLap(l models.Lap) {
