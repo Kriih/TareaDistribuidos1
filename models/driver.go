@@ -8,3 +8,20 @@ type Driver struct {
 	TeamName     string `json:"team_name"`
 	CountryCode  string `json:"country_code"`
 }
+
+type DriverDetail struct {
+	SessionKey       int     `json:"session_key"`
+	CircuitShortName string  `json:"circuit_short_name"`
+	Race             string  `json:"race"`
+	Position         int     `json:"position"`
+	FastestLap       bool    `json:"fastest_lap"`
+	MaxSpeed         float64 `json:"max_speed"`
+	BestLapDuration  float64 `json:"best_lap_duration"`
+}
+
+
+type PerformanceSummary struct {
+	Wins         int     `json:"wins"`
+	Top3Finishes int     `json:"top_3_finishes"`
+	MaxSpeed     float64 `json:"max_speed"`
+}
