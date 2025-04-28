@@ -15,5 +15,7 @@ func NewRouter() *gin.Engine {
 	r.GET("/api/carrera/detalle/:id", handlers.GetRaceDetail)
 	r.GET("/api/temporada/resumen", handlers.GetSeasonSummary)
 
+	// r.GET("/api/carrera/detalle/:id", handlers.GetRaceDetail)
+	r.GET("/api/corredor", handlers.GetAllDrivers)
 	return r
 }
