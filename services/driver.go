@@ -44,9 +44,12 @@ func GetDriverRaceResults(driverID int) ([]models.DriverDetail, error) {
 			sessions.circuit_short_name,
 			"GP de " || sessions.circuit_short_name AS race,
 			positions.position,
-			CASE WHEN MIN(laps.lap_duration) = laps.lap_duration THEN 1 ELSE 0 END AS fastest_lap,
-			MAX(laps.st_speed) AS max_speed,
-			MIN(laps.lap_duration) AS best_lap_duration
+			CASE 
+				WHEN MIN(CASE WHEN laps.lap_duration > 0 THEN laps.lap_duration ELSE NULL END) = laps.lap_duration 
+				THEN 1 ELSE 0 
+			END AS fastest_lap,
+			MAX(CASE WHEN laps.st_speed > 0 THEN laps.st_speed ELSE NULL END) AS max_speed,
+			MIN(CASE WHEN laps.lap_duration > 0 THEN laps.lap_duration ELSE NULL END) AS best_lap_duration
 		FROM positions
 		JOIN sessions ON positions.session_key = sessions.session_key
 		LEFT JOIN laps ON positions.driver_number = laps.driver_number AND positions.session_key = laps.session_key
@@ -90,7 +93,6 @@ func GetDriverRaceResults(driverID int) ([]models.DriverDetail, error) {
 	return raceResults, nil
 }
 
-
 func GetDriverPerformanceSummary(driverID int) (models.PerformanceSummary, error) {
 	var summary models.PerformanceSummary
 
@@ -98,7 +100,7 @@ func GetDriverPerformanceSummary(driverID int) (models.PerformanceSummary, error
 		SELECT 
 			COUNT(CASE WHEN position = 1 THEN 1 END) AS wins,
 			COUNT(CASE WHEN position <= 3 THEN 1 END) AS top_3_finishes,
-			MAX(laps.st_speed) AS max_speed
+			MAX(CASE WHEN laps.st_speed > 0 THEN laps.st_speed ELSE NULL END) AS max_speed
 		FROM positions
 		LEFT JOIN laps ON positions.driver_number = laps.driver_number AND positions.session_key = laps.session_key
 		WHERE positions.driver_number = ?;
