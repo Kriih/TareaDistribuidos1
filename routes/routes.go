@@ -2,15 +2,15 @@ package routes
 
 import (
 	"f1-statshub/handlers"
-	"github.com/gorilla/mux"
-	
+
+	"github.com/gin-gonic/gin"
 )
 
 // NewRouter crea y devuelve un enrutador configurado
-func NewRouter() *mux.Router {
-	r := mux.NewRouter()
+func NewRouter() *gin.Engine {
+	r := gin.Default()
 
 	// Rutas para los usuarios
-	r.HandleFunc("/", handlers.HomeHandler).Methods("GET")
+	r.GET("/api/carrera/detalle/:id", handlers.GetRaceDetail)
 	return r
 }
