@@ -51,19 +51,13 @@ func main() {
 			}
 			defer resp.Body.Close()
 
-			var driverDetail []models.DriverDetail
+			// quiero imprimir todo
+			var driverDetail models.DriverDetail
 			if err := json.NewDecoder(resp.Body).Decode(&driverDetail); err != nil {
 				fmt.Println("Error al decodificar la respuesta:", err)
 				return
 			}
 			fmt.Println("Detalle del corredor:")
-			fmt.Println("-------------------------------------------------------------")
-			fmt.Printf("| %-10s | %-12s | %-15s | %-4s |\n", "Nombre", "Apellido", "Carrera", "Posicion")
-			fmt.Println("-------------------------------------------------------------")
-			for _, detail := range driverDetail {
-				//imprime todo lo que consigue sin nada más escrito
-				fmt.Printf(detail)
-			}
 
 		case "3":
 			fmt.Println("-> Ver carreras")
