@@ -43,7 +43,7 @@ func main() {
 		case "2":
 			num := readInput("Ingrese el numero del piloto: ")
 			fmt.Printf("-> Ver detalle del corredor %s\n", num)
-			// TODO: GET http://localhost:8080/api/corredor/detalle/{num}
+			// TODO: GET http://localhost:8080/api/corredor/detalle/{num}`
 			resp, err := http.Get("http://localhost:8080/api/corredor/detalle/" + num)
 			if err != nil {
 				fmt.Println("Error al hacer la solicitud:", err)
@@ -51,17 +51,47 @@ func main() {
 			}
 			defer resp.Body.Close()
 
-			// quiero imprimir todo
 			var driverDetail models.DriverDetail
 			if err := json.NewDecoder(resp.Body).Decode(&driverDetail); err != nil {
 				fmt.Println("Error al decodificar la respuesta:", err)
 				return
 			}
-			fmt.Println("Detalle del corredor:")
+			fmt.Println("Detalle del corredor:", driverDetail.Race)
 
 		case "3":
 			fmt.Println("-> Ver carreras")
 			// TODO: GET http://localhost:8080/api/carrera
+
+			resp, err := http.Get("http://localhost:8080/api/carrera")
+			if err != nil {
+				fmt.Println("Error al hacer la solicitud:", err)
+				return
+			}
+			defer resp.Body.Close()
+
+			var session []models.Session
+			if err := json.NewDecoder(resp.Body).Decode(&session); err != nil {
+				fmt.Println("Error al decodificar la respuesta:", err)
+				return
+			}
+			fmt.Println("Lista de carreras:")
+			fmt.Println("-------------------------------------------------------------") // ID carrera, Pais, Fecha, Year, Circuito
+			// type Session struct {
+			// 	SessionKey       int    `json:"session_key"`
+			// 	SessionName      string `json:"session_name"`
+			// 	SessionType      string `json:"session_type"`
+			// 	Location         string `json:"location"`
+			// 	CountryName      string `json:"country_name"`
+			// 	Year             int    `json:"year"`
+			// 	CircuitShortName string `json:"circuit_short_name"`
+			// 	DateStart        string `json:"date_start"` // ISO8601 string
+			// }
+			fmt.Printf("| %-10s | %-12s | %-15s | %-4s |\n", "ID Carrera", "Pais", "Fecha", "Circuito")
+			fmt.Println("-------------------------------------------------------------")
+			for _, session := range session {
+				fmt.Printf("| %-10s | %-20s | %-15d | %-4s |\n", session.SessionKey, session.CountryName, session.Year, session.CircuitShortName)
+			}
+
 		case "4":
 			num := readInput("Ingrese el ID de la carrera: ")
 			fmt.Printf("-> Ver detalle de la carrera %s\n", num)
