@@ -34,29 +34,45 @@ func main() {
 			}
 			fmt.Println("Lista de corredores:")
 			fmt.Println("-------------------------------------------------------------")
-			fmt.Printf("| %-10s | %-12s | %-15s | %-4s |\n", "Nombre", "Apellido", "Equipo", "País")
+			fmt.Printf("| %-5s | %-10s | %-12s | %-15s | %-4s |\n", "Nro", "Nombre", "Apellido", "Equipo", "País")
 			fmt.Println("-------------------------------------------------------------")
 			for _, driver := range drivers {
-				fmt.Printf("| %-10s | %-12s | %-15s | %-4s |\n", driver.FirstName, driver.LastName, driver.TeamName, driver.CountryCode)
+				fmt.Printf("| %-5d | %-10s | %-12s | %-15s | %-4s |\n", driver.DriverNumber, driver.FirstName, driver.LastName, driver.TeamName, driver.CountryCode)
 			}
 
 		case "2":
 			num := readInput("Ingrese el numero del piloto: ")
 			fmt.Printf("-> Ver detalle del corredor %s\n", num)
-			// TODO: GET http://localhost:8080/api/corredor/detalle/{num}`
+		
 			resp, err := http.Get("http://localhost:8080/api/corredor/detalle/" + num)
 			if err != nil {
 				fmt.Println("Error al hacer la solicitud:", err)
 				return
 			}
 			defer resp.Body.Close()
-
-			var driverDetail models.DriverDetail
+		
+			var driverDetail models.DriverDetailConsole
 			if err := json.NewDecoder(resp.Body).Decode(&driverDetail); err != nil {
 				fmt.Println("Error al decodificar la respuesta:", err)
 				return
 			}
-			fmt.Println("Detalle del corredor:", driverDetail.Race)
+		
+			// Mostrar resumen de rendimiento
+			fmt.Println("\n===== RESUMEN DE RENDIMIENTO =====")
+			fmt.Printf("Victorias: %d\n", driverDetail.PerformanceSummary.Wins)
+			fmt.Printf("Top 3:     %d\n", driverDetail.PerformanceSummary.Top3Finishes)
+			fmt.Printf("Vel. Máx.: %d km/h\n", driverDetail.PerformanceSummary.MaxSpeed)
+		
+			// Mostrar resultados de carrera
+			fmt.Println("\n========= RESULTADOS DE CARRERA =========")
+			fmt.Printf("| %-15s | %-25s | %-8s | %-12s | %-10s | %-6s |\n", "Circuito", "Carrera", "Posición", "Vuelta rápida", "Vel. máx", "Mejor vuelta")
+			fmt.Println(strings.Repeat("-", 95))
+			for _, race := range driverDetail.RaceResults {
+				fmt.Printf("| %-15s | %-25s | %-8d | %-12t | %-10d | %-6.3f |\n",
+					race.CircuitShortName, race.Race, race.Position, race.FastestLap, race.MaxSpeed, race.BestLapDuration)
+			}
+		
+		
 
 		case "3":
 			fmt.Println("-> Ver carreras")
@@ -89,7 +105,7 @@ func main() {
 			fmt.Printf("| %-10s | %-12s | %-15s | %-4s |\n", "ID Carrera", "Pais", "Fecha", "Circuito")
 			fmt.Println("-------------------------------------------------------------")
 			for _, session := range session {
-				fmt.Printf("| %-10s | %-20s | %-15d | %-4s |\n", session.SessionKey, session.CountryName, session.Year, session.CircuitShortName)
+				fmt.Printf("| %-5d | %-20s | %-15d | %-4s |\n", session.SessionKey, session.CountryName, session.Year, session.CircuitShortName)
 			}
 
 		case "4":
