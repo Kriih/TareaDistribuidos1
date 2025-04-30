@@ -4,15 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"bufio"
-	"os"
-
 	_ "modernc.org/sqlite"
 )
 
 var DB *sql.DB
 
-// InitDB abre la conexión y crea las tablas si no existen
 func InitDB() {
 	var err error
 	DB, err = sql.Open("sqlite", "proxy.db")
@@ -20,44 +16,34 @@ func InitDB() {
 		log.Fatalf("Error abriendo base de datos: %v", err)
 	}
 
-	// Preguntamos si queremos actualizar la base de datos
-	if confirmUpdate() {
-		// Si se confirma, borramos los datos de las tablas
-		clearTables()
-	}
+	fmt.Println("Instalando/actualizando la base de datos...")
+	clearTables()
 	createTables()
-}
-
-func confirmUpdate() bool {
-	fmt.Println("¿Desea actualizar la base de datos? (s/n)")
-	reader := bufio.NewReader(os.Stdin)
-	input, _ := reader.ReadString('\n')
-
-	return input == "s\n" || input == "S\n"
+	
 }
 
 func clearTables() {
-	_, err := DB.Exec("DELETE FROM drivers")
+	_, err := DB.Exec("DROP TABLE IF EXISTS drivers")
 	if err != nil {
-		log.Printf("Error limpiando tabla drivers: %v", err)
+		log.Printf("Error eliminando tabla drivers: %v", err)
 	}
 
-	_, err = DB.Exec("DELETE FROM sessions")
+	_, err = DB.Exec("DROP TABLE IF EXISTS sessions")
 	if err != nil {
-		log.Printf("Error limpiando tabla sessions: %v", err)
+		log.Printf("Error eliminando tabla sessions: %v", err)
 	}
 
-	_, err = DB.Exec("DELETE FROM positions")
+	_, err = DB.Exec("DROP TABLE IF EXISTS positions")
 	if err != nil {
-		log.Printf("Error limpiando tabla positions: %v", err)
+		log.Printf("Error eliminando tabla positions: %v", err)
 	}
 
-	_, err = DB.Exec("DELETE FROM laps")
+	_, err = DB.Exec("DROP TABLE IF EXISTS laps")
 	if err != nil {
-		log.Printf("Error limpiando tabla laps: %v", err)
+		log.Printf("Error eliminando tabla laps: %v", err)
 	}
 
-	fmt.Println("Datos de las tablas eliminados correctamente.")
+	fmt.Println("Tablas eliminadas correctamente.")
 }
 
 func createTables() {

@@ -21,9 +21,8 @@ func main() {
 	db.InitDB()
 
 	for {
-		// Ejecutar las sincronizaciones
 		if err := services.SyncDrivers(); err != nil {
-			log.Printf("Error sincronizando drivers: %v. Reintentando en 3 segundos...\n", err)
+			log.Printf("Error sincronizando drivers: %v. \nReintentando en 3 segundos...\n", err)
 			time.Sleep(3 * time.Second)
 			continue
 		}
